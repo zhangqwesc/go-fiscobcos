@@ -48,19 +48,19 @@ const (
 
 // Receipt represents the results of a transaction.
 type Receipt struct {
-	BlockHash         common.Hash   `json:"blockHash"`
-	BlockNumber       string `json:"blockNumber"`
-	ContractAddress   common.Address `json:"contractAddress"`
-	From             string        `json:"from"`
-	GasUsed           string 		`json:"gasUsed"`
-	Input            string        `json:"input"`
-	Logs              []*Log 		`json:"logs"`
-	Bloom		  	  Bloom        `json:"logsBloom"`
-	Output           string        `json:"output"`
-	Status           string        `json:"status"`
-	To                string        `json:"to"`
-	TxHash 			  common.Hash   `json:"transactionHash"`
-	TxIndex  		string        `json:"transactionIndex"`
+	BlockHash       common.Hash    `json:"blockHash"`
+	BlockNumber     string         `json:"blockNumber"`
+	ContractAddress common.Address `json:"contractAddress"`
+	From            string         `json:"from"`
+	GasUsed         string         `json:"gasUsed"`
+	Input           string         `json:"input"`
+	Logs            []*Log         `json:"logs"`
+	Bloom           Bloom          `json:"logsBloom"`
+	Output          string         `json:"output"`
+	Status          string         `json:"status"`
+	To              string         `json:"to"`
+	TxHash          common.Hash    `json:"transactionHash"`
+	TxIndex         string         `json:"transactionIndex"`
 }
 
 // receiptRLP is the consensus encoding of a receipt.
@@ -109,7 +109,7 @@ func NewReceipt(root []byte, failed bool, cumulativeGasUsed string) *Receipt {
 // EncodeRLP implements rlp.Encoder, and flattens the consensus fields of a receipt
 // into an RLP stream. If no post state is present, byzantium fork is assumed.
 func (r *Receipt) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, &receiptRLP{r.statusEncoding(),  r.Bloom, r.Logs})
+	return rlp.Encode(w, &receiptRLP{r.statusEncoding(), r.Bloom, r.Logs})
 }
 
 // DecodeRLP implements rlp.Decoder, and loads the consensus fields of a receipt

@@ -50,4 +50,3 @@ func StartHTTPEndpoint(endpoint string, apis []API, modules []string, cors []str
 	go NewHTTPServer(cors, vhosts, timeouts, handler).Serve(listener)
 	return listener, handler, err
 }
-

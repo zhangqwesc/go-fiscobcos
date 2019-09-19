@@ -57,12 +57,6 @@ func (ec *Client) Close() {
 	ec.c.Close()
 }
 
-type rpcBlock struct {
-	Hash         common.Hash      `json:"hash"`
-	Transactions []rpcTransaction `json:"transactions"`
-	UncleHashes  []common.Hash    `json:"uncles"`
-}
-
 func (ec *Client) BlockByHash(ctx context.Context, groupId uint64, hash common.Hash) (*types.Block, error) {
 	return ec.getBlock(ctx, "getBlockByHash", groupId, hash, true)
 }
@@ -98,8 +92,8 @@ func (ec *Client) TransactionByHash(ctx context.Context, groupId uint64, transac
 func (ec *Client) PbftView(ctx context.Context, groupId uint64) (string, error) {
 	return ec.getPbftView(ctx, "getPbftView", groupId)
 }
-func (ec *Client) BlockHashByNumber(ctx context.Context, groupId uint64, blockNumber string) (string, error) {
-	return ec.getBlockHashByNumber(ctx, "getBlockHashByNumber", groupId, blockNumber)
+func (ec *Client) BlockHashByNumber(ctx context.Context, groupId uint64, blockNumber uint64) (*common.Hash, error) {
+	return ec.getBlockHashByNumber(ctx, "getBlockHashByNumber", groupId, string(blockNumber))
 }
 func (ec *Client) PendingTxSize(ctx context.Context, groupId uint64) (string, error) {
 	return ec.getPendingTxSize(ctx, "getPendingTxSize", groupId)
@@ -120,20 +114,20 @@ func (ec *Client) ObserverList(ctx context.Context, groupId uint64) ([]string, e
 func (ec *Client) ConsensusStatus(ctx context.Context, groupId uint64) ([]interface{}, error) {
 	return ec.getConsensusStatus(ctx, "getConsensusStatus", groupId)
 }
-func (ec *Client) Peers(ctx context.Context, groupId uint64) ([]interface{}, error) {
+func (ec *Client) Peers(ctx context.Context, groupId uint64) ([]types.PeerStatus, error) {
 	return ec.getPeers(ctx, "getPeers", groupId)
 }
-func (ec *Client) GroupPeers(ctx context.Context, groupId uint64) ([]interface{}, error) {
+func (ec *Client) GroupPeers(ctx context.Context, groupId uint64) ([]string, error) {
 	return ec.getGroupPeers(ctx, "getGroupPeers", groupId)
 }
-func (ec *Client) NodeIDList(ctx context.Context, groupId uint64) ([]interface{}, error) {
+func (ec *Client) NodeIDList(ctx context.Context, groupId uint64) ([]string, error) {
 	return ec.getNodeIDList(ctx, "getNodeIDList", groupId)
 }
-func (ec *Client) GroupList(ctx context.Context) ([]interface{}, error) {
+func (ec *Client) GroupList(ctx context.Context) ([]int64, error) {
 	return ec.getGroupList(ctx, "getGroupList")
 }
 
-func (ec *Client) PendingTransactions(ctx context.Context, groupId uint64) ([]interface{}, error) {
+func (ec *Client) PendingTransactions(ctx context.Context, groupId uint64) ([]types.PendingTx, error) {
 	return ec.getPendingTransactions(ctx, "getPendingTransactions", groupId)
 }
 
@@ -293,15 +287,16 @@ func (ec *Client) getPbftView(ctx context.Context, method string, args ...interf
 	}
 	return raw, err
 }
-func (ec *Client) getBlockHashByNumber(ctx context.Context, method string, args ...interface{}) (string, error) {
+func (ec *Client) getBlockHashByNumber(ctx context.Context, method string, args ...interface{}) (*common.Hash, error) {
 	var raw string
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
-		return "", err
+		return nil, err
 	} else if len(raw) == 0 {
-		return "", fiscobcos.NotFound
+		return nil, fiscobcos.NotFound
 	}
-	return raw, err
+	blockHash := common.HexToHash(raw)
+	return &blockHash, nil
 }
 func (ec *Client) getPendingTxSize(ctx context.Context, method string, args ...interface{}) (string, error) {
 	var raw string
@@ -363,8 +358,23 @@ func (ec *Client) getConsensusStatus(ctx context.Context, method string, args ..
 	}
 	return raw, err
 }
-func (ec *Client) getPeers(ctx context.Context, method string, args ...interface{}) ([]interface{}, error) {
-	var raw []interface{}
+func (ec *Client) getPeers(ctx context.Context, method string, args ...interface{}) ([]types.PeerStatus, error) {
+	var raw json.RawMessage
+	err := ec.c.CallContext(ctx, &raw, method, args...)
+	if err != nil {
+		return nil, err
+	} else if len(raw) == 0 {
+		return nil, fiscobcos.NotFound
+	}
+	// Decode header and transactions.
+	var result []types.PeerStatus
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, err
+	}
+	return result, err
+}
+func (ec *Client) getGroupPeers(ctx context.Context, method string, args ...interface{}) ([]string, error) {
+	var raw []string
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
 		return nil, err
@@ -373,8 +383,8 @@ func (ec *Client) getPeers(ctx context.Context, method string, args ...interface
 	}
 	return raw, err
 }
-func (ec *Client) getGroupPeers(ctx context.Context, method string, args ...interface{}) ([]interface{}, error) {
-	var raw []interface{}
+func (ec *Client) getNodeIDList(ctx context.Context, method string, args ...interface{}) ([]string, error) {
+	var raw []string
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
 		return nil, err
@@ -383,8 +393,8 @@ func (ec *Client) getGroupPeers(ctx context.Context, method string, args ...inte
 	}
 	return raw, err
 }
-func (ec *Client) getNodeIDList(ctx context.Context, method string, args ...interface{}) ([]interface{}, error) {
-	var raw []interface{}
+func (ec *Client) getGroupList(ctx context.Context, method string, args ...interface{}) ([]int64, error) {
+	var raw []int64
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
 		return nil, err
@@ -393,43 +403,20 @@ func (ec *Client) getNodeIDList(ctx context.Context, method string, args ...inte
 	}
 	return raw, err
 }
-func (ec *Client) getGroupList(ctx context.Context, method string, args ...interface{}) ([]interface{}, error) {
-	var raw []interface{}
+func (ec *Client) getPendingTransactions(ctx context.Context, method string, args ...interface{}) ([]types.PendingTx, error) {
+	var raw json.RawMessage
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
 		return nil, err
 	} else if len(raw) == 0 {
 		return nil, fiscobcos.NotFound
 	}
-	return raw, err
-}
-func (ec *Client) getPendingTransactions(ctx context.Context, method string, args ...interface{}) ([]interface{}, error) {
-	var raw []interface{}
-	err := ec.c.CallContext(ctx, &raw, method, args...)
-	if err != nil {
+	// Decode header and transactions.
+	var result []types.PendingTx
+	if err := json.Unmarshal(raw, &result); err != nil {
 		return nil, err
-	} else if len(raw) == 0 {
-		return nil, fiscobcos.NotFound
 	}
-	return raw, err
-}
-
-type rpcTransaction struct {
-	tx *types.Transaction
-	txExtraInfo
-}
-
-type txExtraInfo struct {
-	BlockNumber *string         `json:"blockNumber,omitempty"`
-	BlockHash   *common.Hash    `json:"blockHash,omitempty"`
-	From        *common.Address `json:"from,omitempty"`
-}
-
-func (tx *rpcTransaction) UnmarshalJSON(msg []byte) error {
-	if err := json.Unmarshal(msg, &tx.tx); err != nil {
-		return err
-	}
-	return json.Unmarshal(msg, &tx.txExtraInfo)
+	return result, err
 }
 
 func toBlockNumArg(number *big.Int) string {
