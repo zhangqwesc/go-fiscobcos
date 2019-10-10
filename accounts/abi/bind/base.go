@@ -82,7 +82,7 @@ type BoundContract struct {
 	abi        abi.ABI            // Reflect based ABI to access the correct FiscoBcos methods
 	caller     ContractCaller     // Read interface to interact with the blockchain
 	transactor ContractTransactor // Write interface to interact with the blockchain
-	//filterer   ContractFilterer   // Event filtering to interact with the blockchain
+	filterer   ContractFilterer   // Event filtering to interact with the blockchain
 }
 
 // NewBoundContract creates a low level contract interface through which calls
@@ -282,4 +282,51 @@ func ensureContext(ctx context.Context) context.Context {
 		return context.TODO()
 	}
 	return ctx
+}
+
+func (c *BoundContract) FilterLogs(opts *FilterOpts, name string, query ...[]interface{}) (chan types.Log, event.Subscription, error) {
+	// Don't crash on a lazy user
+	if opts == nil {
+		opts = new(FilterOpts)
+	}
+	// Append the event selector to the query parameters and construct the topic set
+	query = append([][]interface{}{{c.abi.Events[name].Id()}}, query...)
+
+	topics, err := makeTopics(query...)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Start the background filtering
+	logs := make(chan types.Log, 128)
+
+	config := fiscobcos.FilterQuery{
+		Addresses: []common.Address{c.address},
+		Topics:    topics,
+		FromBlock: new(big.Int).SetUint64(opts.Start),
+	}
+	if opts.End != nil {
+		config.ToBlock = new(big.Int).SetUint64(*opts.End)
+	}
+	/* TODO(karalabe): Replace the rest of the method below with this when supported
+	sub, err := c.filterer.SubscribeFilterLogs(ensureContext(opts.Context), config, logs)
+	*/
+	buff, err := c.filterer.FilterLogs(ensureContext(opts.Context), config)
+	if err != nil {
+		return nil, nil, err
+	}
+	sub, err := event.NewSubscription(func(quit <-chan struct{}) error {
+		for _, log := range buff {
+			select {
+			case logs <- log:
+			case <-quit:
+				return nil
+			}
+		}
+		return nil
+	}), nil
+
+	if err != nil {
+		return nil, nil, err
+	}
+	return logs, sub, nil
 }

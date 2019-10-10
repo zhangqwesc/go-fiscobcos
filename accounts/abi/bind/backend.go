@@ -76,7 +76,12 @@ type ContractTransactor interface {
 type ContractFilterer interface {
 	// FilterLogs executes a log filter operation, blocking during execution and
 	// returning all the results in one batch.
-	//
+	// TODO(karalabe): Deprecate when the subscription one can return past data too.
+	FilterLogs(ctx context.Context, query fiscobcos.FilterQuery) ([]types.Log, error)
+
+	// SubscribeFilterLogs creates a background log filtering operation, returning
+	// a subscription immediately, which can be used to stream the found events.
+	SubscribeFilterLogs(ctx context.Context, query fiscobcos.FilterQuery, ch chan<- types.Log) (fiscobcos.Subscription, error)
 }
 
 // DeployBackend wraps the operations needed by WaitMined and WaitDeployed.
@@ -89,4 +94,5 @@ type DeployBackend interface {
 type ContractBackend interface {
 	ContractCaller
 	ContractTransactor
+	ContractFilterer
 }

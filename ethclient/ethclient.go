@@ -20,6 +20,7 @@ package ethclient
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math/big"
 
 	"github.com/chislab/go-fiscobcos"
@@ -482,4 +483,13 @@ func toCallArg(msg fiscobcos.CallEthMsg) interface{} {
 	}
 
 	return arg
+}
+
+func (ec *Client) FilterLogs(ctx context.Context, q fiscobcos.FilterQuery) ([]types.Log, error) {
+	return nil, errors.New("FiscoBcos doesn't provide this function.")
+}
+
+// SubscribeFilterLogs subscribes to the results of a streaming filter query.
+func (ec *Client) SubscribeFilterLogs(ctx context.Context, q fiscobcos.FilterQuery, ch chan<- types.Log) (fiscobcos.Subscription, error) {
+	return nil, errors.New("FiscoBcos doesn't provide this function.")
 }
