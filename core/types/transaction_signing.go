@@ -209,9 +209,13 @@ func (fs FrontierSigner) Hash(tx *Transaction) common.Hash {
 		tx.data.RandomId,
 		tx.data.Price,
 		tx.data.GasLimit,
+		tx.data.BlockLimit,
 		tx.data.Recipient,
 		tx.data.Amount,
 		tx.data.Payload,
+		tx.data.ChainId,
+		tx.data.GroupId,
+		tx.data.ExtraData,
 	})
 }
 
