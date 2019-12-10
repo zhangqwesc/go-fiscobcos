@@ -61,21 +61,33 @@ type Peer struct {
 }
 
 type Block struct {
-	DbHash           common.Hash   `json:"dbHash"`
-	ExtraData        []interface{} `json:"extraData"`
-	GasLimit         string        `json:"gasLimit"`
-	GasUsed          string        `json:"gasUsed"`
-	Hash             common.Hash   `json:"hash"`
-	LogsBloom        string        `json:"logsBloom"`
-	Number           string        `json:"number"`
-	ParentHash       common.Hash   `json:"parentHash"`
-	ReceiptsRoot     string        `json:"receiptsRoot"`
-	Sealer           string        `json:"sealer"`
-	SealerList       []string      `json:"sealerList"`
-	StateRoot        string        `json:"stateRoot"`
-	Timestamp        string        `json:"timestamp"`
-	Transactions     []Receipt     `json:"transactions"`
-	TransactionsRoot string        `json:"transactionsRoot"`
+	DbHash       string        `json:"dbHash"`
+	ExtraData    []interface{} `json:"extraData"`
+	GasLimit     string        `json:"gasLimit"`
+	GasUsed      string        `json:"gasUsed"`
+	Hash         string        `json:"hash"`
+	LogsBloom    string        `json:"logsBloom"`
+	Number       string        `json:"number"`
+	ParentHash   string        `json:"parentHash"`
+	ReceiptsRoot string        `json:"receiptsRoot"`
+	Sealer       string        `json:"sealer"`
+	SealerList   []string      `json:"sealerList"`
+	StateRoot    string        `json:"stateRoot"`
+	Timestamp    string        `json:"timestamp"`
+	Transactions []struct {
+		BlockHash        string `json:"blockHash"`
+		BlockNumber      string `json:"blockNumber"`
+		From             string `json:"from"`
+		Gas              string `json:"gas"`
+		GasPrice         string `json:"gasPrice"`
+		Hash             string `json:"hash"`
+		Input            string `json:"input"`
+		Nonce            string `json:"nonce"`
+		To               string `json:"to"`
+		TransactionIndex string `json:"transactionIndex"`
+		Value            string `json:"value"`
+	} `json:"transactions"`
+	TransactionsRoot string `json:"transactionsRoot"`
 }
 
 type TotalTransactionCount struct {
