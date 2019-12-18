@@ -18,18 +18,15 @@ package bind
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"github.com/chislab/go-fiscobcos"
 	"github.com/chislab/go-fiscobcos/accounts/abi"
 	"github.com/chislab/go-fiscobcos/common"
-	"github.com/chislab/go-fiscobcos/common/hexutil"
 	"github.com/chislab/go-fiscobcos/core/types"
 	"github.com/chislab/go-fiscobcos/crypto"
 	"github.com/chislab/go-fiscobcos/event"
-	"github.com/pborman/uuid"
 	"math/big"
+	"time"
 )
 
 // SignerFn is a signer function callback when a contract requires a method to
@@ -197,10 +194,10 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.BlockLimit == nil {
 		return nil, errors.New("Block limit shoud be preseted.")
 	}
-
-	c2 := sha256.Sum256([]byte(uuid.New()))
-
-	nonce := hexutil.MustDecodeUint64("0x" + hex.EncodeToString(c2[:3]))
+	if opts.RandomId == nil {
+		opts.RandomId =  big.NewInt(time.Now().Unix())
+	}
+	nonce := opts.RandomId.Uint64()
 	// Figure out the gas allowance and gas price values
 	gasPrice := opts.GasPrice
 	gasLimit := opts.GasLimit
