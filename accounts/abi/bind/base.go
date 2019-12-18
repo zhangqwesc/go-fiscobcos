@@ -200,7 +200,7 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 
 	c2 := sha256.Sum256([]byte(uuid.New()))
 
-	nonce := hexutil.MustDecodeUint64("0x" + hex.EncodeToString(c2[:5]))
+	nonce := hexutil.MustDecodeUint64("0x" + hex.EncodeToString(c2[:4]))
 	// Figure out the gas allowance and gas price values
 	gasPrice := opts.GasPrice
 	gasLimit := opts.GasLimit
