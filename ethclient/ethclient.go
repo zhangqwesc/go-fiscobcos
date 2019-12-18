@@ -429,9 +429,9 @@ func toBlockNumArg(number *big.Int) string {
 
 // CodeAt returns the contract code of the given account.
 // The block number can be nil, in which case the code is taken from the latest known block.
-func (ec *Client) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
+func (ec *Client) CodeAt(ctx context.Context, groupId int, account common.Address, blockNumber *big.Int) ([]byte, error) {
 	var result hexutil.Bytes
-	err := ec.c.CallContext(ctx, &result, "getCode", account, toBlockNumArg(blockNumber))
+	err := ec.c.CallContext(ctx, &result, "getCode", groupId, account, toBlockNumArg(blockNumber))
 	return result, err
 }
 

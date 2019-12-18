@@ -46,7 +46,7 @@ var (
 type ContractCaller interface {
 	// CodeAt returns the code of the given account. This is needed to differentiate
 	// between contract internal errors and the local chain being out of sync.
-	CodeAt(ctx context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error)
+	CodeAt(ctx context.Context, groupId int, contract common.Address, blockNumber *big.Int) ([]byte, error)
 	// ContractCall executes an FiscoBcos contract call with the specified data as the
 	// input.
 	CallContract(ctx context.Context, call fiscobcos.CallMsg, blockNumber *big.Int) ([]byte, error)
@@ -87,7 +87,7 @@ type ContractFilterer interface {
 // DeployBackend wraps the operations needed by WaitMined and WaitDeployed.
 type DeployBackend interface {
 	TransactionReceipt(ctx context.Context, groupId uint64, txHash common.Hash) (*types.Receipt, error)
-	CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error)
+	CodeAt(ctx context.Context, groupId int, account common.Address, blockNumber *big.Int) ([]byte, error)
 }
 
 // ContractBackend defines the methods needed to work with contracts on a read-write basis.

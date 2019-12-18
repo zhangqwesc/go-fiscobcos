@@ -15,15 +15,15 @@ var _ = (*logMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (l Log) MarshalJSON() ([]byte, error) {
 	type Log struct {
-		Address     *common.Address `json:"address" gencodec:"required"`
+		Address     common.Address `json:"address" gencodec:"required"`
 		Topics      []common.Hash   `json:"topics" gencodec:"required"`
-		Data        *hexutil.Bytes  `json:"data" gencodec:"required"`
-		BlockNumber *hexutil.Uint64 `json:"blockNumber"`
-		TxHash      *common.Hash    `json:"transactionHash"`
-		TxIndex     *hexutil.Uint   `json:"transactionIndex"`
-		BlockHash   *common.Hash    `json:"blockHash"`
-		Index       *hexutil.Uint   `json:"logIndex"`
-		Removed     *bool           `json:"removed"`
+		Data        hexutil.Bytes  `json:"data" gencodec:"required"`
+		BlockNumber hexutil.Uint64 `json:"blockNumber"`
+		TxHash      common.Hash    `json:"transactionHash"`
+		TxIndex     hexutil.Uint   `json:"transactionIndex"`
+		BlockHash   common.Hash    `json:"blockHash"`
+		Index       hexutil.Uint   `json:"logIndex"`
+		Removed     bool           `json:"removed"`
 	}
 	var enc Log
 	enc.Address = l.Address

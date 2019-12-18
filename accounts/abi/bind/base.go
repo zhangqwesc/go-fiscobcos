@@ -18,15 +18,18 @@ package bind
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
-	"math/big"
-
 	"github.com/chislab/go-fiscobcos"
 	"github.com/chislab/go-fiscobcos/accounts/abi"
 	"github.com/chislab/go-fiscobcos/common"
+	"github.com/chislab/go-fiscobcos/common/hexutil"
 	"github.com/chislab/go-fiscobcos/core/types"
 	"github.com/chislab/go-fiscobcos/crypto"
 	"github.com/chislab/go-fiscobcos/event"
+	"github.com/pborman/uuid"
+	"math/big"
 )
 
 // SignerFn is a signer function callback when a contract requires a method to
@@ -152,7 +155,7 @@ func (c *BoundContract) Call(opts *CallOpts, result interface{}, method string, 
 		output, err = c.caller.CallContract(ctx, msg, opts.BlockNumber)
 		if err == nil && len(output) == 0 {
 			// Make sure we have a contract to operate on, and bail out otherwise.
-			if code, err = c.caller.CodeAt(ctx, c.address, opts.BlockNumber); err != nil {
+			if code, err = c.caller.CodeAt(ctx, opts.GroupId, c.address, opts.BlockNumber); err != nil {
 				return err
 			} else if len(code) == 0 {
 				return ErrNoCode
@@ -193,6 +196,11 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	}
 	if opts.BlockLimit == nil {
 		return nil, errors.New("Block limit shoud be preseted.")
+	}
+
+	if opts.RandomId == nil {
+		c2 := sha256.Sum256([]byte(uuid.New()))
+		opts.RandomId = hexutil.MustDecodeBig("0x" + hex.EncodeToString(c2[:8]))
 	}
 
 	nonce := opts.RandomId.Uint64()
