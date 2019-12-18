@@ -198,12 +198,9 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 		return nil, errors.New("Block limit shoud be preseted.")
 	}
 
-	if opts.RandomId == nil {
-		c2 := sha256.Sum256([]byte(uuid.New()))
-		opts.RandomId = hexutil.MustDecodeBig("0x" + hex.EncodeToString(c2[:8]))
-	}
+	c2 := sha256.Sum256([]byte(uuid.New()))
 
-	nonce := opts.RandomId.Uint64()
+	nonce := hexutil.MustDecodeUint64("0x" + hex.EncodeToString(c2[:5]))
 	// Figure out the gas allowance and gas price values
 	gasPrice := opts.GasPrice
 	gasLimit := opts.GasLimit
