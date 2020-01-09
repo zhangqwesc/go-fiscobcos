@@ -102,16 +102,16 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	// Otherwise try to deploy the contract
 	c := NewBoundContract(common.Address{}, abi, backend, backend, nil)
 
-	input, err := c.abi.Pack("", params...)
+	input, err := abi.Pack("", params...)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	tx, err := c.transact(opts, nil, append(bytecode, input...))
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	c.address = crypto.CreateAddress(opts.From, tx.RandomId())
-	return c.address, tx, c, nil
+	payLoad := append(bytecode, input...)
+	rawTx := types.NewContractCreation(opts.RandomId.Uint64(), opts.BlockLimit.Uint64(), opts.Value,
+		opts.GasLimit, opts.GasPrice, payLoad, big.NewInt(1), big.NewInt(int64(opts.GroupId)), nil)
+	signedTx, err := opts.Signer(types.HomesteadSigner{}, opts.From, rawTx)
+	backend.SendTransaction(ensureContext(opts.Context), signedTx)
+	return crypto.CreateAddress(opts.From, signedTx.RandomId()), signedTx, c, nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
