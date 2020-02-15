@@ -18,15 +18,19 @@ package bind
 
 import (
 	"context"
+	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/chislab/go-fiscobcos"
 	"github.com/chislab/go-fiscobcos/accounts/abi"
 	"github.com/chislab/go-fiscobcos/common"
+	"github.com/chislab/go-fiscobcos/common/hexutil"
 	"github.com/chislab/go-fiscobcos/core/types"
 	"github.com/chislab/go-fiscobcos/crypto"
 	"github.com/chislab/go-fiscobcos/event"
+	"github.com/chislab/go-fiscobcos/rlp"
+	"github.com/pborman/uuid"
 	"math/big"
-	"time"
 )
 
 // SignerFn is a signer function callback when a contract requires a method to
@@ -106,6 +110,8 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
+	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
 	payLoad := append(bytecode, input...)
 	rawTx := types.NewContractCreation(opts.RandomId.Uint64(), opts.BlockLimit.Uint64(), opts.Value,
 		opts.GasLimit, opts.GasPrice, payLoad, big.NewInt(1), big.NewInt(int64(opts.GroupId)), nil)
@@ -194,16 +200,14 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.BlockLimit == nil {
 		return nil, errors.New("Block limit shoud be preseted.")
 	}
-	if opts.RandomId == nil {
-		opts.RandomId =  big.NewInt(time.Now().Unix())
-	}
-	nonce := opts.RandomId.Uint64()
+	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
+	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
 	// Figure out the gas allowance and gas price values
 	gasPrice := opts.GasPrice
 	gasLimit := opts.GasLimit
 	// Create the transaction, sign it and schedule it for execution
 	var rawTx *types.Transaction
-	rawTx = types.NewTransaction(nonce, opts.BlockLimit.Uint64(), c.address, value, gasLimit, gasPrice, input, big.NewInt(1), big.NewInt(1), nil)
+	rawTx = types.NewTransaction(opts.RandomId.Uint64(), opts.BlockLimit.Uint64(), c.address, value, gasLimit, gasPrice, input, big.NewInt(1), big.NewInt(1), nil)
 	if opts.Signer == nil {
 		return nil, errors.New("no signer to authorize the transaction with")
 	}
