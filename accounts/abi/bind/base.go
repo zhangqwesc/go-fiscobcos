@@ -110,6 +110,7 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	opts.RandomId = nil
 	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
 	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
 	payLoad := append(bytecode, input...)
@@ -200,6 +201,7 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.BlockLimit == nil {
 		return nil, errors.New("Block limit shoud be preseted.")
 	}
+	opts.RandomId = nil
 	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
 	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
 	// Figure out the gas allowance and gas price values
