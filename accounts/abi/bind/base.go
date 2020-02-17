@@ -110,9 +110,9 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	opts.RandomId = nil
 	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
-	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
+	nonce, _ := hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
+	opts.RandomId = nonce
 	payLoad := append(bytecode, input...)
 	rawTx := types.NewContractCreation(opts.RandomId.Uint64(), opts.BlockLimit.Uint64(), opts.Value,
 		opts.GasLimit, opts.GasPrice, payLoad, big.NewInt(1), big.NewInt(int64(opts.GroupId)), nil)
@@ -201,9 +201,9 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.BlockLimit == nil {
 		return nil, errors.New("Block limit shoud be preseted.")
 	}
-	opts.RandomId = nil
 	b, _ := rlp.EncodeToBytes(uuid.NewUUID())
-	opts.RandomId , _ = hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
+	nonce, _ := hexutil.DecodeBig(fmt.Sprintf("0x%x", md5.Sum(b[:10])))
+	opts.RandomId = nonce
 	// Figure out the gas allowance and gas price values
 	gasPrice := opts.GasPrice
 	gasLimit := opts.GasLimit
